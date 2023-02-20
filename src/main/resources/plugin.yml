@@ -1,0 +1,14 @@
+name: Rpg
+version: '${project.version}'
+main: org.skylord.mc.rpg.Rpg
+api-version: 1.19
+authors: [ Skylord_Mickket ]
+description: Basic minecraft rpg
+commands:
+  menu: {}
+  echo: {}
+  class: {}
+  spawnentity: {}
+  reloadcfg: {}
+  savecfg: {}
+
