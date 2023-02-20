@@ -1,8 +1,10 @@
 package org.skylord.mc.rpg.commands;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
@@ -10,6 +12,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.skylord.mc.rpg.Rpg;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,8 +27,22 @@ public class ClassCMD extends AbstractCMD
     @Override
     public void execute(CommandSender sender, String label, String[] args)
     {
-        if(!(sender instanceof Player)) return;
+        if(!(sender instanceof Player))
+        {
+            String msg = plugin.getConfig().getString("messages.playeronly");
+            msg = msg.replace("&", "\u00a7");
+            sender.sendMessage(msg);
+            return;
+        }
         Player p = (Player) sender;
+        String filePath = plugin.getDataFolder() + File.separator + "players" + File.separator + p.getName() + ".yml";
+        File f = new File(filePath);
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(f);
+        if(config.getInt(p.getName() + ".Class") != 0)
+        {
+            p.sendMessage(ChatColor.RED + "You have already chosen a class!");
+            return;
+        }
         Inventory inv = plugin.holders.get(p);
         if (inv == null)
         {

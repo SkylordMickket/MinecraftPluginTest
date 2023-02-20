@@ -26,10 +26,7 @@ import org.skylord.mc.rpg.commands.SpawnEntityCMD;
 
 import java.io.File;
 import java.sql.Array;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public final class Rpg extends JavaPlugin implements Listener
 {
@@ -53,5 +50,4 @@ public final class Rpg extends JavaPlugin implements Listener
 
     }
     public static Rpg getInstance() { return instance; }
-
 }
