@@ -38,7 +38,7 @@ public class ClassCMD extends AbstractCMD
         String filePath = plugin.getDataFolder() + File.separator + "players" + File.separator + p.getName() + ".yml";
         File f = new File(filePath);
         YamlConfiguration config = YamlConfiguration.loadConfiguration(f);
-        if(config.getInt(p.getName() + ".Class") != 0)
+        if(config.getInt(p.getUniqueId() + ".Class") != 0)
         {
             p.sendMessage(ChatColor.RED + "You have already chosen a class!");
             return;

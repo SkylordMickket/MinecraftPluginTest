@@ -1,9 +1,6 @@
 package org.skylord.mc.rpg;
 
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -12,10 +9,12 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
+import org.spigotmc.event.player.PlayerSpawnLocationEvent;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -32,13 +31,58 @@ public class Handler implements Listener
     public void OnJoin(PlayerJoinEvent event)
     {
         Player p = event.getPlayer();
+        String filePath = plugin.getDataFolder() + File.separator + "players" + File.separator + p.getName() + ".yml";
+        File f = new File(filePath);
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(f);
         if(!p.hasPlayedBefore())
         {
-            String filePath = plugin.getDataFolder() + File.separator + "players" + File.separator + p.getName() + ".yml";
-            File f = new File(filePath);
-            YamlConfiguration config = YamlConfiguration.loadConfiguration(f);
-            config.set(p.getName() + ".Class", Integer.valueOf(0));
+            config.set(p.getUniqueId() + ".Class", Integer.valueOf(0));
+            config.set(p.getUniqueId() + ".Spawn.x", Double.valueOf(164));
+            config.set(p.getUniqueId() + ".Spawn.y", Double.valueOf(74));
+            config.set(p.getUniqueId() + ".Spawn.z", Double.valueOf(-138));
+            config.set(p.getUniqueId() + ".Spawn.yaw", Double.valueOf(-90));
+            config.set(p.getUniqueId() + ".Spawn.pitch", Double.valueOf(0));
+        }
+        if(config.getInt(p.getUniqueId() + ".Class") == 0)
+        {
             p.sendMessage(ChatColor.BLUE + "Hello there!");
+            p.sendMessage(ChatColor.BLUE + "Take a look around here!");
+            p.sendMessage(ChatColor.BLUE + "And then choice your class! (Command /class)");
+        }
+
+    }
+    @EventHandler
+    public void OnRespawn(PlayerRespawnEvent event)
+    {
+        Player p = event.getPlayer();
+        String filePath = plugin.getDataFolder() + File.separator + "players" + File.separator + p.getName() + ".yml";
+        File f = new File(filePath);
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(f);
+        if(config.getInt(p.getUniqueId() + ".Class") == 0) return;
+        double x = config.getDouble(p.getUniqueId() + ".Spawn.x");
+        double y = config.getDouble(p.getUniqueId() + ".Spawn.y");
+        double z = config.getDouble(p.getUniqueId() + ".Spawn.z");
+        float yaw = (float) config.getDouble(p.getUniqueId() + ".Spawn.yaw");
+        float pitch = (float) config.getDouble(p.getUniqueId() + ".Spawn.pitch");
+        Location location = new Location(Bukkit.getServer().getWorlds().get(0), x, y, z, yaw, pitch);
+        event.setRespawnLocation(location);
+    }
+    @EventHandler
+    public void OnSpawn(PlayerSpawnLocationEvent event)
+    {
+        Player p = event.getPlayer();
+        String filePath = plugin.getDataFolder() + File.separator + "players" + File.separator + p.getName() + ".yml";
+        File f = new File(filePath);
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(f);
+        if(config.getInt(p.getUniqueId() + ".Class") == 0)
+        {
+            double x = config.getDouble(p.getUniqueId() + ".Spawn.x");
+            double y = config.getDouble(p.getUniqueId() + ".Spawn.y");
+            double z = config.getDouble(p.getUniqueId() + ".Spawn.z");
+            float yaw = (float) config.getDouble(p.getUniqueId() + ".Spawn.yaw");
+            float pitch = (float) config.getDouble(p.getUniqueId() + ".Spawn.pitch");
+            Location location = new Location(Bukkit.getServer().getWorlds().get(0), x, y, z, yaw, pitch);
+            event.setSpawnLocation(location);
         }
     }
     @EventHandler
@@ -98,11 +142,23 @@ public class Handler implements Listener
         String filePath = plugin.getDataFolder() + File.separator + "players" + File.separator + p.getName() + ".yml";
         File f = new File(filePath);
         YamlConfiguration config = YamlConfiguration.loadConfiguration(f);
-        config.set(p.getName() + ".Class", Integer.valueOf(cl));
-        config.set(p.getName() + ".Health", Integer.valueOf(maxHealth));
+        config.set(p.getUniqueId() + ".Class", Integer.valueOf(cl));
+        config.set(p.getUniqueId() + ".Health", Integer.valueOf(maxHealth));
+        config.set(p.getUniqueId() + ".Spawn.x", Double.valueOf(190));
+        config.set(p.getUniqueId() + ".Spawn.y", Double.valueOf(71));
+        config.set(p.getUniqueId() + ".Spawn.z", Double.valueOf(-120));
+        config.set(p.getUniqueId() + ".Spawn.yaw", Double.valueOf(180));
+        config.set(p.getUniqueId() + ".Spawn.pitch", Double.valueOf(0));
         try { config.save(f); }
         catch (Exception exc) { exc.printStackTrace(); }
-        p.setMaxHealth(config.getInt(p.getName() + ".Health"));
+        p.setMaxHealth(config.getInt(p.getUniqueId() + ".Health"));
         p.setHealth(p.getMaxHealth());
+        double x = config.getDouble(p.getUniqueId() + ".Spawn.x");
+        double y = config.getDouble(p.getUniqueId() + ".Spawn.y");
+        double z = config.getDouble(p.getUniqueId() + ".Spawn.z");
+        float yaw = (float) config.getDouble(p.getUniqueId() + ".Spawn.yaw");
+        float pitch = (float) config.getDouble(p.getUniqueId() + ".Spawn.pitch");
+        Location location = new Location(Bukkit.getServer().getWorlds().get(0), x, y, z, yaw, pitch);
+        p.teleport(location);
     }
 }
