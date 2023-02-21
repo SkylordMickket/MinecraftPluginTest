@@ -11,4 +11,6 @@ commands:
   spawnentity: {}
   reloadcfg: {}
   savecfg: {}
+  loadcharacter: {}
+  leveling: {}
 

@@ -29,7 +29,7 @@ public class ClassCMD extends AbstractCMD
     {
         if(!(sender instanceof Player))
         {
-            String msg = plugin.getConfig().getString("messages.playeronly");
+            String msg = Rpg.getInstance().getConfig().getString("messages.playeronly");
             msg = msg.replace("&", "\u00a7");
             sender.sendMessage(msg);
             return;

@@ -7,11 +7,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.skylord.mc.rpg.Rpg;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class MenuCMD extends AbstractCMD
 {
@@ -25,7 +21,7 @@ public class MenuCMD extends AbstractCMD
     {
         if(!(sender instanceof Player))
         {
-            String msg = plugin.getConfig().getString("messages.playeronly");
+            String msg = Rpg.getInstance().getConfig().getString("messages.playeronly");
             msg = msg.replace("&", "\u00a7");
             sender.sendMessage(msg);
             return;

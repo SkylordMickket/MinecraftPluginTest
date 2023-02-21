@@ -3,9 +3,12 @@ package org.skylord.mc.rpg;
 import org.bukkit.*;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -17,15 +20,41 @@ import org.bukkit.persistence.PersistentDataType;
 import org.spigotmc.event.player.PlayerSpawnLocationEvent;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class Handler implements Listener
 {
     private Rpg plugin;
+    private static final Map<UUID, Leveling> playerLeveling = new HashMap<UUID, Leveling>();
+    public static final Leveling getPlayerLeveling(Player p)
+    {
+        Leveling result = playerLeveling.get(p.getUniqueId());
+        if(result == null)
+        {
+            result = new Leveling(p);
+            playerLeveling.put(p.getUniqueId(), result);
+        }
+        return result;
+    }
     public Handler(Rpg plugin)
     {
         this.plugin = plugin;
+    }
+    @EventHandler
+    public void OnEntityDeath(EntityDeathEvent event)
+    {
+        Entity killed = event.getEntity();
+        Entity killer = event.getEntity().getKiller();
+        if(killer == null) return;
+        if(killer.getType().equals(EntityType.PLAYER))
+        {
+            Player p = (Player) killer;
+            p.sendMessage("lol");
+            if(killed.getType().equals(EntityType.ZOMBIE))
+            {
+                getPlayerLeveling(p).addXp(100);
+            }
+        }
     }
     @EventHandler
     public void OnJoin(PlayerJoinEvent event)
@@ -37,11 +66,8 @@ public class Handler implements Listener
         if(!p.hasPlayedBefore())
         {
             config.set(p.getUniqueId() + ".Class", Integer.valueOf(0));
-            config.set(p.getUniqueId() + ".Spawn.x", Double.valueOf(164));
-            config.set(p.getUniqueId() + ".Spawn.y", Double.valueOf(74));
-            config.set(p.getUniqueId() + ".Spawn.z", Double.valueOf(-138));
-            config.set(p.getUniqueId() + ".Spawn.yaw", Double.valueOf(-90));
-            config.set(p.getUniqueId() + ".Spawn.pitch", Double.valueOf(0));
+            try { config.save(f); }
+            catch (Exception exc) { exc.printStackTrace(); }
         }
         if(config.getInt(p.getUniqueId() + ".Class") == 0)
         {
@@ -49,7 +75,10 @@ public class Handler implements Listener
             p.sendMessage(ChatColor.BLUE + "Take a look around here!");
             p.sendMessage(ChatColor.BLUE + "And then choice your class! (Command /class)");
         }
-
+        else
+        {
+            plugin.LoadConfig(p);
+        }
     }
     @EventHandler
     public void OnRespawn(PlayerRespawnEvent event)
@@ -59,13 +88,7 @@ public class Handler implements Listener
         File f = new File(filePath);
         YamlConfiguration config = YamlConfiguration.loadConfiguration(f);
         if(config.getInt(p.getUniqueId() + ".Class") == 0) return;
-        double x = config.getDouble(p.getUniqueId() + ".Spawn.x");
-        double y = config.getDouble(p.getUniqueId() + ".Spawn.y");
-        double z = config.getDouble(p.getUniqueId() + ".Spawn.z");
-        float yaw = (float) config.getDouble(p.getUniqueId() + ".Spawn.yaw");
-        float pitch = (float) config.getDouble(p.getUniqueId() + ".Spawn.pitch");
-        Location location = new Location(Bukkit.getServer().getWorlds().get(0), x, y, z, yaw, pitch);
-        event.setRespawnLocation(location);
+        event.setRespawnLocation(plugin.GetSpawnLocation(p));
     }
     @EventHandler
     public void OnSpawn(PlayerSpawnLocationEvent event)
@@ -76,13 +99,14 @@ public class Handler implements Listener
         YamlConfiguration config = YamlConfiguration.loadConfiguration(f);
         if(config.getInt(p.getUniqueId() + ".Class") == 0)
         {
-            double x = config.getDouble(p.getUniqueId() + ".Spawn.x");
-            double y = config.getDouble(p.getUniqueId() + ".Spawn.y");
-            double z = config.getDouble(p.getUniqueId() + ".Spawn.z");
-            float yaw = (float) config.getDouble(p.getUniqueId() + ".Spawn.yaw");
-            float pitch = (float) config.getDouble(p.getUniqueId() + ".Spawn.pitch");
-            Location location = new Location(Bukkit.getServer().getWorlds().get(0), x, y, z, yaw, pitch);
-            event.setSpawnLocation(location);
+            config.set(p.getUniqueId() + ".Spawn.x", Double.valueOf(164));
+            config.set(p.getUniqueId() + ".Spawn.y", Double.valueOf(74));
+            config.set(p.getUniqueId() + ".Spawn.z", Double.valueOf(-138));
+            config.set(p.getUniqueId() + ".Spawn.yaw", Double.valueOf(-90));
+            config.set(p.getUniqueId() + ".Spawn.pitch", Double.valueOf(0));
+            try { config.save(f); }
+            catch (Exception exc) { exc.printStackTrace(); }
+            event.setSpawnLocation(plugin.GetSpawnLocation(p));
         }
     }
     @EventHandler
@@ -115,17 +139,17 @@ public class Handler implements Listener
         {
             if(inv.equals(clickedInv) && event.getCurrentItem().getType() == Material.NETHERITE_SWORD)
             {
-                SetClass(p, 1, 16);
+                plugin.SetClass(p, 1, 16);
                 p.sendMessage(ChatColor.GREEN + "You picked the Knight class!");
             }
             if(inv.equals(clickedInv) && event.getCurrentItem().getType() == Material.BLAZE_ROD)
             {
-                SetClass(p, 2, 10);
+                plugin.SetClass(p, 2, 10);
                 p.sendMessage(ChatColor.GREEN + "You picked the Mage class!");
             }
             if(inv.equals(clickedInv) && event.getCurrentItem().getType() == Material.NETHERITE_AXE)
             {
-                SetClass(p, 3, 20);
+                plugin.SetClass(p, 3, 20);
                 p.sendMessage(ChatColor.GREEN + "You picked the Warrior class!");
             }
             inv.close();
@@ -135,30 +159,5 @@ public class Handler implements Listener
     public void OnInventoryClose(InventoryCloseEvent event)
     {
         plugin.holders.remove(event.getPlayer());
-    }
-
-    public void SetClass(Player p, int cl, int maxHealth)
-    {
-        String filePath = plugin.getDataFolder() + File.separator + "players" + File.separator + p.getName() + ".yml";
-        File f = new File(filePath);
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(f);
-        config.set(p.getUniqueId() + ".Class", Integer.valueOf(cl));
-        config.set(p.getUniqueId() + ".Health", Integer.valueOf(maxHealth));
-        config.set(p.getUniqueId() + ".Spawn.x", Double.valueOf(190));
-        config.set(p.getUniqueId() + ".Spawn.y", Double.valueOf(71));
-        config.set(p.getUniqueId() + ".Spawn.z", Double.valueOf(-120));
-        config.set(p.getUniqueId() + ".Spawn.yaw", Double.valueOf(180));
-        config.set(p.getUniqueId() + ".Spawn.pitch", Double.valueOf(0));
-        try { config.save(f); }
-        catch (Exception exc) { exc.printStackTrace(); }
-        p.setMaxHealth(config.getInt(p.getUniqueId() + ".Health"));
-        p.setHealth(p.getMaxHealth());
-        double x = config.getDouble(p.getUniqueId() + ".Spawn.x");
-        double y = config.getDouble(p.getUniqueId() + ".Spawn.y");
-        double z = config.getDouble(p.getUniqueId() + ".Spawn.z");
-        float yaw = (float) config.getDouble(p.getUniqueId() + ".Spawn.yaw");
-        float pitch = (float) config.getDouble(p.getUniqueId() + ".Spawn.pitch");
-        Location location = new Location(Bukkit.getServer().getWorlds().get(0), x, y, z, yaw, pitch);
-        p.teleport(location);
     }
 }
