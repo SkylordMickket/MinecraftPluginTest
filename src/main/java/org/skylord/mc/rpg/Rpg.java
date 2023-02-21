@@ -35,6 +35,7 @@ public final class Rpg extends JavaPlugin implements Listener
 
     }
     public static Rpg getInstance() { return instance; }
+    @SuppressWarnings("deprecation")
     public void SetClass(Player p, int cl, int maxHealth)
     {
         String filePath = getDataFolder() + File.separator + "players" + File.separator + p.getName() + ".yml";
@@ -65,9 +66,9 @@ public final class Rpg extends JavaPlugin implements Listener
         double z = config.getDouble(p.getUniqueId() + ".Spawn.z");
         float yaw = (float) config.getDouble(p.getUniqueId() + ".Spawn.yaw");
         float pitch = (float) config.getDouble(p.getUniqueId() + ".Spawn.pitch");
-        Location location = new Location(Bukkit.getServer().getWorlds().get(0), x, y, z, yaw, pitch);
-        return location;
+        return new Location(Bukkit.getServer().getWorlds().get(0), x, y, z, yaw, pitch);
     }
+    @SuppressWarnings("deprecation")
     public void LoadConfig(Player p)
     {
         String filePath = getDataFolder() + File.separator + "players" + File.separator + p.getName() + ".yml";
